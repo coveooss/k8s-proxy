@@ -5,7 +5,7 @@ This project will allow you to access the dashboard without having to paste the 
 
 
 ## Disclaimer
-This project was made as part of a hackathon so it's rough around the edges, might contains bugs and have a couple of things hardcoded.
+This project was made as part of a hackathon so it's rough around the edges, might contains bugs and have a couple of things hardcoded. Feel free to open a PR or an issue if you find anything.
 
 ## How to use
 The proxy needs a couple of parameters before it can start. You can inject those properties in a yaml file or with command line argument.
@@ -27,7 +27,10 @@ k8s:
 ```
 
 ### Command line argument
-You can inject the required parameter on the command line with `-Dgoogle.clientId=something -Dgoogle.clientSecret=secret -Dgoogle.authorizeUrl=https://accounts.google.com/o/oauth2/auth -Dgoogle.tokenUrl=https://www.googleapis.com/oauth2/v4/token -Dk8s.clusterEndpoint=https://your.k8scluster.com`
+You can inject the required parameter on the command line as such : 
+```
+java -jar -Dgoogle.clientId=something -Dgoogle.clientSecret=secret -Dgoogle.authorizeUrl=https://accounts.google.com/o/oauth2/auth -Dgoogle.tokenUrl=https://www.googleapis.com/oauth2/v4/token -Dk8s.clusterEndpoint=https://your.k8scluster.com
+```
 
 ### Run the jar file
 
