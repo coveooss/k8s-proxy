@@ -29,7 +29,7 @@ k8s:
 ### Command line argument
 You can inject the required parameter on the command line as such : 
 ```
-java -jar -Dgoogle.clientId=something -Dgoogle.clientSecret=secret -Dgoogle.authorizeUrl=https://accounts.google.com/o/oauth2/auth -Dgoogle.tokenUrl=https://www.googleapis.com/oauth2/v4/token -Dk8s.clusterEndpoint=https://your.k8scluster.com
+java -jar -Dgoogle.clientId=something -Dgoogle.clientSecret=secret -Dgoogle.authorizeUrl=https://accounts.google.com/o/oauth2/auth -Dgoogle.tokenUrl=https://www.googleapis.com/oauth2/v4/token -Dk8s.clusterEndpoint=https://your.k8scluster.com k8s-proxy-0.0.1.jar
 ```
 
 ### Run the jar file

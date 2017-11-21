@@ -43,9 +43,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.coveo.k8sproxy.domain.GoogleIdAndRefreshToken;
 import com.coveo.k8sproxy.domain.JweToken;
+import com.coveo.k8sproxy.domain.TokenInfo;
 import com.coveo.k8sproxy.token.GoogleTokenRetriever;
 import com.coveo.k8sproxy.token.JweTokenRetriever;
 
@@ -99,6 +101,28 @@ public class K8sReverseProxy implements DisposableBean
         response.sendRedirect(initialRedirect);
     }
 
+    @RequestMapping("/get_token")
+    @ResponseBody
+    public TokenInfo getTokens(HttpServletRequest request, HttpServletResponse response)
+            throws ClientProtocolException,
+                IOException
+    {
+        if (googleToken == null || googleToken.getIdToken() == null || googleToken.getRefreshToken() == null) {
+            initialRedirect = request.getRequestURI().toString();
+            response.sendRedirect(googleTokenRetriever.getAuthorizeUrl());
+            return null;
+        }
+
+        ReadLock readLock = lock.readLock();
+        try {
+            readLock.lock();
+            return new TokenInfo().withIdToken(googleToken.getIdToken())
+                                  .withRefreshToken(googleToken.getRefreshToken());
+        } finally {
+            readLock.unlock();
+        }
+    }
+
     @RequestMapping("/ui")
     public void uiRedirect(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
@@ -147,7 +171,9 @@ public class K8sReverseProxy implements DisposableBean
             response.setStatus(proxiedResponse.getStatusLine().getStatusCode());
             Stream.of(proxiedResponse.getAllHeaders())
                   .forEach(header -> response.setHeader(header.getName(), header.getValue()));
-            IOUtils.copy(proxiedResponse.getEntity().getContent(), response.getOutputStream());
+            if (proxiedResponse.getEntity() != null) {
+                IOUtils.copy(proxiedResponse.getEntity().getContent(), response.getOutputStream());
+            }
         }
     }
 
