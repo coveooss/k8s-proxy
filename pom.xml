@@ -5,7 +5,7 @@
 
     <groupId>com.coveo</groupId>
     <artifactId>k8s-proxy</artifactId>
-    <version>0.0.1</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
 
     <name>k8s-proxy</name>
