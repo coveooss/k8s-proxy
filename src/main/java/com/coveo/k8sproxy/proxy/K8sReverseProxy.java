@@ -5,6 +5,7 @@ package com.coveo.k8sproxy.proxy;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
@@ -90,7 +91,7 @@ public class K8sReverseProxy implements DisposableBean
             jweToken = jweTokenRetriever.fetchJweToken(googleToken.getIdToken());
 
             try (PrintWriter out = new PrintWriter(REFRESH_TOKEN_FILENAME)) {
-                out.println(googleToken.getRefreshToken());
+                out.print(googleToken.getRefreshToken());
             }
         } finally {
             writeLock.unlock();
@@ -181,7 +182,9 @@ public class K8sReverseProxy implements DisposableBean
     public void initialize()
     {
         try {
-            String persistedRefreshToken = new String(Files.readAllBytes(Paths.get(REFRESH_TOKEN_FILENAME)));
+            String persistedRefreshToken = new String(Files.readAllBytes(Paths.get(REFRESH_TOKEN_FILENAME)),
+                                                      StandardCharsets.UTF_8);
+            persistedRefreshToken.replaceAll(System.getProperty("line.separator"), "");
 
             logger.info("Found persisted refresh token in the configuration file, using it to gain a new id token.");
             GoogleIdAndRefreshToken googleIdToken = googleTokenRetriever.refreshToken(persistedRefreshToken);
