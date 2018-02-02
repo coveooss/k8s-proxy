@@ -3,7 +3,7 @@
  */
 package com.coveo.k8sproxy.token;
 
-import static com.coveo.k8sproxy.proxy.K8sReverseProxy.*;
+import static com.coveo.k8sproxy.proxy.K8sReverseProxy.BEARER_PREFIX;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -59,5 +59,10 @@ public class JweTokenRetriever
             jweToken.setEncodedJweToken(URLEncoder.encode(jweToken.getJweToken(), StandardCharsets.UTF_8.toString()));
             return jweToken;
         }
+    }
+
+    public void setK8sClusterEndpoint(String k8sClusterEndpoint)
+    {
+        this.k8sClusterEndpoint = k8sClusterEndpoint;
     }
 }

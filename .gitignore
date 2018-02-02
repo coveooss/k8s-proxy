@@ -30,6 +30,10 @@ hs_err_pid*
 .springBeans
 .settings/
 
+# IntelliJ stuff
+.idea
+*.iml
+
 target/
 
 refresh_token

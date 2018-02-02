@@ -5,6 +5,8 @@ package com.coveo.k8sproxy.proxy;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -26,12 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPatch;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -43,12 +40,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.coveo.k8sproxy.domain.ClusterEndpoint;
 import com.coveo.k8sproxy.domain.GoogleIdAndRefreshToken;
 import com.coveo.k8sproxy.domain.JweToken;
 import com.coveo.k8sproxy.domain.TokenInfo;
+import com.coveo.k8sproxy.domain.exception.InvalidParameterException;
+import com.coveo.k8sproxy.domain.exception.MissingParameterException;
 import com.coveo.k8sproxy.token.GoogleTokenRetriever;
 import com.coveo.k8sproxy.token.JweTokenRetriever;
 
@@ -77,6 +78,47 @@ public class K8sReverseProxy implements DisposableBean
 
     private Timer timer = new Timer();
     private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
+    @RequestMapping(value = "/k8s_cluster_endpoint", method = RequestMethod.GET)
+    @ResponseBody
+    public ClusterEndpoint getCurrentEndpoint(HttpServletRequest request, HttpServletResponse response)
+    {
+        return new ClusterEndpoint(k8sClusterEndpoint);
+    }
+
+    @RequestMapping(value = "/k8s_cluster_endpoint/set", method = RequestMethod.GET)
+    @ResponseBody
+    public ClusterEndpoint setCurentEndpoint(@RequestParam String endpoint,
+                                             HttpServletRequest request,
+                                             HttpServletResponse response)
+            throws MissingParameterException,
+                InvalidParameterException,
+                IOException
+    {
+        if (endpoint == null) {
+            throw new MissingParameterException("endpoint");
+        }
+
+        try {
+            new URL(endpoint);
+        } catch (MalformedURLException e) {
+            throw new InvalidParameterException("endpoint", "is not a valid URL.");
+        }
+
+        logger.info("Setting cluster endpoint to value '{}'", endpoint);
+        k8sClusterEndpoint = endpoint;
+
+        WriteLock writeLock = lock.writeLock();
+        try {
+            writeLock.lock();
+            jweTokenRetriever.setK8sClusterEndpoint(k8sClusterEndpoint);
+            jweToken = jweTokenRetriever.fetchJweToken(googleToken.getIdToken());
+        } finally {
+            writeLock.unlock();
+        }
+
+        return new ClusterEndpoint(k8sClusterEndpoint);
+    }
 
     @RequestMapping("/redirect_uri")
     public void callback(@RequestParam String code, HttpServletRequest request, HttpServletResponse response)
