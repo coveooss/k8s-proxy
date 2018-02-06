@@ -1,11 +1,11 @@
 # k8s-proxy
 Simple reverse proxy to serve the [Kubernetes dashboard](https://github.com/kubernetes/dashboard) with Google OIDC as the identity provider. Technically, any OIDC provider should work but this has been tested only with Google for the moment. 
 
-This project will allow you to access the dashboard without having to paste the JWT token in the UI and paste a new one once it expires. It handles the refresh of the token and the injection of the JWE token on each request. This makes a transparent solution until [this PR](https://github.com/kubernetes/kubernetes/pull/29714) is merged.
+This project will allow you to access the dashboard without having to paste the JWT token in the UI and paste a new one once it expires. It handles the refresh of the token and the injection of the JWE token on each request. This makes a transparent solution until [this PR](https://github.com/kubernetes/kubernetes/pull/29714) is reopened and merged.
 
 
 ## Disclaimer
-This project was made as part of a hackathon so it's rough around the edges, might contains bugs and have a couple of things hardcoded. Feel free to open a PR or an issue if you find anything.
+This project was made as part of a hackathon so it's rough around the edges, lacks validation, might contains bugs and have a couple of things hardcoded. Feel free to open a PR or an issue if you find anything.
 
 ## How to use
 The proxy needs a couple of parameters before it can start. You can inject those properties in a yaml file or with command line argument.
