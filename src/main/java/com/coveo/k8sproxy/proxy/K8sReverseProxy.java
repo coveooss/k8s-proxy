@@ -49,7 +49,6 @@ import com.coveo.k8sproxy.domain.GoogleIdAndRefreshToken;
 import com.coveo.k8sproxy.domain.JweToken;
 import com.coveo.k8sproxy.domain.TokenInfo;
 import com.coveo.k8sproxy.domain.exception.InvalidParameterException;
-import com.coveo.k8sproxy.domain.exception.MissingParameterException;
 import com.coveo.k8sproxy.token.GoogleTokenRetriever;
 import com.coveo.k8sproxy.token.JweTokenRetriever;
 
@@ -81,36 +80,30 @@ public class K8sReverseProxy implements DisposableBean
 
     @RequestMapping(value = "/k8s_cluster_endpoint", method = RequestMethod.GET)
     @ResponseBody
-    public ClusterEndpoint getCurrentEndpoint(HttpServletRequest request, HttpServletResponse response)
+    public ClusterEndpoint getActiveEndpoint()
     {
         return new ClusterEndpoint(k8sClusterEndpoint);
     }
 
-    @RequestMapping(value = "/k8s_cluster_endpoint/set", method = RequestMethod.GET)
+    @RequestMapping(value = "/k8s_cluster_endpoint/set", method = { RequestMethod.GET, RequestMethod.PUT })
     @ResponseBody
-    public ClusterEndpoint setCurentEndpoint(@RequestParam String endpoint,
-                                             HttpServletRequest request,
-                                             HttpServletResponse response)
-            throws MissingParameterException,
-                InvalidParameterException,
+    public ClusterEndpoint setActiveEndpoint(@RequestParam String endpoint)
+            throws InvalidParameterException,
                 IOException
     {
-        if (endpoint == null) {
-            throw new MissingParameterException("endpoint");
-        }
-
         try {
             new URL(endpoint);
         } catch (MalformedURLException e) {
             throw new InvalidParameterException("endpoint", "is not a valid URL.");
         }
 
-        logger.info("Setting cluster endpoint to value '{}'", endpoint);
-        k8sClusterEndpoint = endpoint;
-
         WriteLock writeLock = lock.writeLock();
         try {
             writeLock.lock();
+
+            logger.info("Setting cluster endpoint to value '{}'", endpoint);
+            k8sClusterEndpoint = endpoint;
+
             jweTokenRetriever.setK8sClusterEndpoint(k8sClusterEndpoint);
             jweToken = jweTokenRetriever.fetchJweToken(googleToken.getIdToken());
         } finally {

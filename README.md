@@ -38,3 +38,20 @@ java -jar -Dgoogle.clientId=something -Dgoogle.clientSecret=secret -Dgoogle.auth
 1. Run the jar file with `java -jar k8s-proxy-0.0.1.jar`
 1. Access the proxy at [http://localhost:8888/ui](http://localhost:8888/ui)
 
+## Using multiple kubernetes clusters
+If you have multiple kubernetes clusters that use the same login, it is possible to switch between clusters at runtime without relogging or rebooting the proxy.
+
+You can see the endpoint of the active cluster at [http://localhost:8888/k8s_cluster_endpoint](http://localhost:8888/k8s_cluster_endpoint). The response is of the following format:
+```
+{
+    "k8sClusterEndpoint":"https://my.awesome.cluster.k8s.com"
+}
+```
+
+To set the active endpoint, you can do a PUT or GET request on 
+```
+http://localhost:8888/k8s_cluster_endpoint/set?endpoint=<YOUR_K8S_ENDPOINT>
+```
+If successful, the response will have the same format as previously described for the get endpoint method.
+
+Once the endpoint has been changed, all calls to the proxy will be routed to the new endpoint. It is not possible to use multiple clusters at a time with this feature (if you wish to do so, you need to spawn multiple instances of the proxy on different ports).

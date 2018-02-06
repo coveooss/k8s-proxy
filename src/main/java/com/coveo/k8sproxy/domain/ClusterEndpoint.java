@@ -2,7 +2,7 @@ package com.coveo.k8sproxy.domain;
 
 public class ClusterEndpoint
 {
-    String k8sClusterEndpoint;
+    private String k8sClusterEndpoint;
 
     public ClusterEndpoint()
     {
