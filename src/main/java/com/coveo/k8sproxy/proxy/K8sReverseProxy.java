@@ -28,7 +28,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -85,32 +90,22 @@ public class K8sReverseProxy implements DisposableBean
         return new ClusterEndpoint(k8sClusterEndpoint);
     }
 
-    @RequestMapping(value = "/k8s_cluster_endpoint/set", method = { RequestMethod.GET, RequestMethod.PUT })
+    @RequestMapping(value = "/k8s_cluster_endpoint", method = RequestMethod.PUT)
+    @ResponseBody
+    public ClusterEndpoint setActiveEndpointWithPut(@RequestParam String endpoint)
+            throws InvalidParameterException,
+                IOException
+    {
+        return internalUpdateClusterEndpoint(endpoint);
+    }
+
+    @RequestMapping(value = "/k8s_cluster_endpoint/set", method = RequestMethod.GET)
     @ResponseBody
     public ClusterEndpoint setActiveEndpoint(@RequestParam String endpoint)
             throws InvalidParameterException,
                 IOException
     {
-        try {
-            new URL(endpoint);
-        } catch (MalformedURLException e) {
-            throw new InvalidParameterException("endpoint", "is not a valid URL.");
-        }
-
-        WriteLock writeLock = lock.writeLock();
-        try {
-            writeLock.lock();
-
-            logger.info("Setting cluster endpoint to value '{}'", endpoint);
-            k8sClusterEndpoint = endpoint;
-
-            jweTokenRetriever.setK8sClusterEndpoint(k8sClusterEndpoint);
-            jweToken = jweTokenRetriever.fetchJweToken(googleToken.getIdToken());
-        } finally {
-            writeLock.unlock();
-        }
-
-        return new ClusterEndpoint(k8sClusterEndpoint);
+        return internalUpdateClusterEndpoint(endpoint);
     }
 
     @RequestMapping("/redirect_uri")
@@ -320,5 +315,30 @@ public class K8sReverseProxy implements DisposableBean
                                                              : newGoogleIdToken.getExpiresIn());
             }
         }
+    }
+
+    @SuppressWarnings("unused")
+    private ClusterEndpoint internalUpdateClusterEndpoint(String endpoint) throws InvalidParameterException, IOException
+    {
+        try {
+            new URL(endpoint);
+        } catch (MalformedURLException e) {
+            throw new InvalidParameterException("endpoint", "is not a valid URL.");
+        }
+
+        WriteLock writeLock = lock.writeLock();
+        try {
+            writeLock.lock();
+
+            logger.info("Setting cluster endpoint to value '{}'", endpoint);
+            k8sClusterEndpoint = endpoint;
+
+            jweTokenRetriever.setK8sClusterEndpoint(k8sClusterEndpoint);
+            jweToken = jweTokenRetriever.fetchJweToken(googleToken.getIdToken());
+        } finally {
+            writeLock.unlock();
+        }
+
+        return new ClusterEndpoint(k8sClusterEndpoint);
     }
 }

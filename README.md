@@ -48,10 +48,16 @@ You can see the endpoint of the active cluster at [http://localhost:8888/k8s_clu
 }
 ```
 
-To set the active endpoint, you can do a PUT or GET request on 
+To set the active endpoint, you can do a request on 
 ```
-http://localhost:8888/k8s_cluster_endpoint/set?endpoint=<YOUR_K8S_ENDPOINT>
+GET http://localhost:8888/k8s_cluster_endpoint/set?endpoint=<YOUR_K8S_ENDPOINT>
+
+or
+
+PUT http://localhost:8888/k8s_cluster_endpoint?endpoint=<YOUR_K8S_ENDPOINT>
 ```
+
+
 If successful, the response will have the same format as previously described for the get endpoint method.
 
 Once the endpoint has been changed, all calls to the proxy will be routed to the new endpoint. It is not possible to use multiple clusters at a time with this feature (if you wish to do so, you need to spawn multiple instances of the proxy on different ports).
