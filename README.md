@@ -38,7 +38,7 @@ java -jar -Dgoogle.clientId=something -Dgoogle.clientSecret=secret -Dgoogle.auth
 1. Run the jar file with `java -jar k8s-proxy-0.0.1.jar`
 1. Access the proxy at [http://localhost:8888/ui](http://localhost:8888/ui)
 
-## Using multiple kubernetes clusters
+## Targetting multiple kubernetes clusters using a single proxy
 If you have multiple kubernetes clusters that use the same login, it is possible to switch between clusters at runtime without relogging or rebooting the proxy.
 
 You can see the endpoint of the active cluster at [http://localhost:8888/k8s_cluster_endpoint](http://localhost:8888/k8s_cluster_endpoint). The response is of the following format:
@@ -62,6 +62,18 @@ PUT http://localhost:8888/k8s_cluster_endpoint?endpoint=<YOUR_K8S_ENDPOINT>
 If successful, the response will have the same format as previously described for the get endpoint method.
 
 Once the endpoint has been changed, all calls to the proxy will be routed to the new endpoint. It is not possible to use multiple clusters at this time (if you wish to do so, you need to spawn multiple instances of the proxy on different ports).
+
+## Targetting multiple kubernetes clusters using many YAML configuration files
+If you have multiple kubernetes clusters, you can create multiple YAML configuration files using this pattern:
+```
+application-PROFILE_NAME_HERE.yml
+```
+
+Then, you can use this command line to use a specific YAML conguration:
+
+```
+java -Dspring.profiles.active=PROFILE_NAME_HERE -jar k8s-proxy-0.0.1.jar
+```
 
 ## Print the current token
 If you need to see the current token used by the proxy, you can do so by using this endpoint : 
